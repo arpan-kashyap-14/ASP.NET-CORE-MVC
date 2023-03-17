@@ -20,6 +20,7 @@ namespace Practice.BookStore.Controllers
 
         public ViewResult Index()
         {
+
             return View();
         }
 

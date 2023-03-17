@@ -1,4 +1,6 @@
-﻿using Practice.BookStore.Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Practice.BookStore.Data;
+using Practice.BookStore.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,34 +8,69 @@ using System.Threading.Tasks;
 
 namespace Practice.BookStore.Repository
 {
-    public class BookRepository
+    public class BookRepository : IBookRepository
     {
+        private readonly BookStoreContext _context;
+
+        public BookRepository(BookStoreContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<int> AddNewBook(BookModel bookModel)
+        {
+            var newBook = new Books()
+            {
+                Title = bookModel.Title,
+                Author = bookModel.Author,
+                LanguageId = bookModel.LanguageId
+            };
+            await _context.Books.AddAsync(newBook);
+            await _context.SaveChangesAsync();
+
+            return newBook.Id;
+
+        }
+
         public List<BookModel> GetAllBooks()
         {
-            return DataSource();
+            var books = new List<BookModel>();
+            var allBooks = _context.Books.ToList();
+            if (allBooks.Any() == true)
+            {
+                foreach (var book in allBooks)
+                {
+                    books.Add(new BookModel()
+                    {
+                        Id = book.Id,
+                        Title = book.Title,
+                        Author = book.Author,
+                    });
+                }
 
+            }
+            return books;
         }
 
         public BookModel GetBookById(int id)
         {
-            return DataSource().Where(x => x.Id == id).FirstOrDefault();
+            return _context.Books.Where(x => x.Id == id).Select(book => new BookModel()
+            {
+                Title = book.Title,
+                Author = book.Author,
+                LanguageId = book.Language.Id,
+                Language = book.Language.Name
+            }
+                ).FirstOrDefault();
+
         }
 
-        public List<BookModel> SearchBook(string title,string authorName)
+        public List<BookModel> SearchBook(string title, string authorName)
         {
-            return DataSource().Where(x => x.Title.Contains(title) && x.Author.Contains(authorName)).ToList();
+            return null;
 
         }
 
-        private List<BookModel> DataSource()
-        {
-            return new List<BookModel>() {
-                new BookModel(){Id=1,Title="MVC",Author="Nitish"},
-                new BookModel(){Id=2,Title="C#",Author="Monika"},
-                new BookModel(){Id=3,Title="Java",Author="Arpan"},
-                new BookModel(){Id=4,Title="PHP",Author="Sumeet"},
-                new BookModel(){Id=5,Title="Angular",Author="Satyam"},
-            };
-        }
+
     }
 }
